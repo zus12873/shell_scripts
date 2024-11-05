@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# 检查是否提供了公钥
+if [ -z "$1" ]; then
+    echo "用法: $0 \"ssh-rsa AAAAB3...\""
+    exit 1
+fi
+
+PUBLIC_KEY="$1"
+
+# 确保 .ssh 目录存在
+if [ ! -d "$HOME/.ssh" ]; then
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+fi
+
+# 将公钥追加到 authorized_keys
+echo "$PUBLIC_KEY" >> "$HOME/.ssh/authorized_keys"
+chmod 600 "$HOME/.ssh/authorized_keys"
+
+# 禁用密码登录
+SSHD_CONFIG="/etc/ssh/sshd_config"
+if grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
+    sudo sed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' "$SSHD_CONFIG"
+else
+    echo "PasswordAuthentication no" | sudo tee -a "$SSHD_CONFIG"
+fi
+
+# 重启 sshd 服务
+sudo systemctl restart sshd
+
+echo "公钥已添加，密码登录已禁用。"
