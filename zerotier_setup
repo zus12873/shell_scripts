@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# 安装 ZeroTier
+echo "安装 ZeroTier..."
+curl -s https://install.zerotier.com | sudo bash
+
+# 启动并启用 ZeroTier 服务
+echo "启动 ZeroTier 服务..."
+sudo systemctl enable zerotier-one
+sudo systemctl start zerotier-one
+
+# 网络 ID 作为参数传递
+if [ -z "$1" ]; then
+  echo "请提供 ZeroTier 网络 ID."
+  exit 1
+fi
+
+NETWORK_ID=$1
+
+# 将服务器加入指定的 ZeroTier 网络
+echo "加入 ZeroTier 网络: $NETWORK_ID"
+sudo zerotier-cli join $NETWORK_ID
+
+# 显示当前网络状态
+echo "等待 ZeroTier 网络连接..."
+sleep 5
+sudo zerotier-cli status
